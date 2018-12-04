@@ -155,7 +155,7 @@ func invMap(hist []uint16, colorMap [][3]byte, ncubes int) {
 
 	for k = 0; k < (uint16)(ncubes); k++ {
 		cube = cubeList[k]
-		for i = cube.Lower; i < cube.Upper; i++ {
+		for i = cube.Lower; i <= cube.Upper; i++ {
 			color = histPtr[i]
 			hist[color] = k
 		}
