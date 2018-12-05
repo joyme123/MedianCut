@@ -15,5 +15,5 @@
 ./main -num=256 -img=asset/girl.png -out=asset/girl-fastmap-out.png --fastMap=true
 ```
 
-效果对比: [preview](https://github.com/joyme123/MedianCut/blob/master/asset/preview.md?raw=true)
+效果对比: [preview](https://github.com/joyme123/MedianCut/blob/master/asset/preview.md)
 
