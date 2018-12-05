@@ -16,7 +16,10 @@ import (
 	"image/png"
 )
 
+// HSIZE 代表颜色的总数量
 const HSIZE = 32768
+
+// MAXCOLORS 最多的颜色数
 const MAXCOLORS = 256
 
 var histPtr [HSIZE]uint16
@@ -24,7 +27,7 @@ var cubeList [MAXCOLORS]util.ColorCube
 var longdim int
 
 // MedianCut 用来切割ColorCude, hist是图片中颜色的直方图
-func MedianCut(hist []uint16, colorMap [][3]byte, maxCubes int) int {
+func MedianCut(hist []uint16, colorMap [][3]byte, maxCubes int, fastMap bool) int {
 	var lr, lg, lb byte
 	var i, median, color uint16
 	var count int
@@ -119,12 +122,12 @@ func MedianCut(hist []uint16, colorMap [][3]byte, maxCubes int) int {
 	}
 
 	// 得到了足够的切割后的cube，现在计算所有方块的颜色,做颜色的映射
-	invMap(hist, colorMap, ncubes)
+	invMap(hist, colorMap, ncubes, fastMap)
 
 	return ncubes
 }
 
-func invMap(hist []uint16, colorMap [][3]byte, ncubes int) {
+func invMap(hist []uint16, colorMap [][3]byte, ncubes int, fastMap bool) {
 	var r, g, b byte
 	var i, k, color uint16
 	var rsum, gsum, bsum float32
@@ -153,13 +156,47 @@ func invMap(hist []uint16, colorMap [][3]byte, ncubes int) {
 		colorMap[k][2] = (byte)(bsum / (float32)(cube.Count))
 	}
 
-	for k = 0; k < (uint16)(ncubes); k++ {
-		cube = cubeList[k]
-		for i = cube.Lower; i <= cube.Upper; i++ {
-			color = histPtr[i]
-			hist[color] = k
+	if fastMap {
+
+		for k = 0; k < (uint16)(ncubes); k++ {
+			cube = cubeList[k]
+			for i = cube.Lower; i <= cube.Upper; i++ {
+				color = histPtr[i]
+				hist[color] = k
+			}
+		}
+	} else {
+		var dmin, dr, dg, db, d float32
+		var index uint16
+
+		for k = 0; k < (uint16)(ncubes); k++ {
+			cube = cubeList[k]
+			for i = cube.Lower; i <= cube.Upper; i++ {
+				color = histPtr[i]
+				r = util.RED(color)
+				g = util.GREEN(color)
+				b = util.BLUE(color)
+
+				/* Search for closest entry in "ColMap" */
+				dmin = 99999999999999
+				for j := 0; j < ncubes; j++ {
+					dr = (float32)(colorMap[j][0]) - (float32)(r)
+					dg = (float32)(colorMap[j][1]) - (float32)(g)
+					db = (float32)(colorMap[j][2]) - (float32)(b)
+					d = dr*dr + dg*dg + db*db
+					if d == 0.0 {
+						index = (uint16)(j)
+						break
+					} else if d < dmin {
+						dmin = d
+						index = (uint16)(j)
+					}
+				}
+				hist[color] = index
+			}
 		}
 	}
+
 }
 
 func main() {
@@ -168,11 +205,13 @@ func main() {
 	var img string
 	var out string
 	var debug bool
+	var fastMap bool
 
 	flag.IntVar(&maxCubes, "num", 256, "output color number")
 	flag.StringVar(&img, "img", "", "image path")
 	flag.StringVar(&out, "out", "", "out put file")
 	flag.BoolVar(&debug, "debug", false, "enable debug mode")
+	flag.BoolVar(&fastMap, "fastMap", false, "enable fastMap mode")
 
 	flag.Parse()
 
@@ -217,7 +256,7 @@ func main() {
 		}
 	}
 
-	ncubes := MedianCut(hist, colorMap, maxCubes)
+	ncubes := MedianCut(hist, colorMap, maxCubes, fastMap)
 
 	// 打印出colorMap
 	// fmt.Printf("colorMap: %v\n", colorMap)
