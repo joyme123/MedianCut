@@ -64,17 +64,18 @@ func (cube *ColorCube) GetColor() {
 
 }
 
+// HistList 封装了HistPtr，用来作排序
 type HistList struct {
 	HistPtr []uint16
 	Longdim int
 }
 
-func (hist HistList) Len() int {
+func (hist *HistList) Len() int {
 	log.Println("长度", len(hist.HistPtr))
 	return len(hist.HistPtr)
 }
 
-func (hist HistList) Less(i, j int) bool {
+func (hist *HistList) Less(i, j int) bool {
 	colorA := hist.HistPtr[i]
 	colorB := hist.HistPtr[j]
 
@@ -99,6 +100,6 @@ func (hist HistList) Less(i, j int) bool {
 
 }
 
-func (hist HistList) Swap(i, j int) {
+func (hist *HistList) Swap(i, j int) {
 	hist.HistPtr[i], hist.HistPtr[j] = hist.HistPtr[j], hist.HistPtr[i]
 }

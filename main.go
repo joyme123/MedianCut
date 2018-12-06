@@ -92,7 +92,9 @@ func MedianCut(hist []uint16, colorMap [][3]byte, maxCubes int, fastMap bool) in
 			longdim = 2
 		}
 
-		sort.Sort(util.HistList{histPtr[cube.Lower:cube.Upper], longdim})
+		histList := &(util.HistList{histPtr[cube.Lower:cube.Upper], longdim})
+
+		sort.Sort(histList)
 
 		count = 0
 		for i = cube.Lower; i <= cube.Upper-1; i++ {
